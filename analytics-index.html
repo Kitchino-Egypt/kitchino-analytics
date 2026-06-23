@@ -2266,7 +2266,11 @@ const _VALID_STATUSES = new Set(['تعاقد', 'مناقشة', 'الغاء', '']
 
 // Designers excluded from ranking/rating/tier comparisons.
 // They are still counted in all KPIs, CVR totals, areas, and measure counts.
-const RANKING_EXCLUDED = ['Mohamed Hatem', 'Ahmed Alfy', 'Sameh Salem'];
+const RANKING_EXCLUDED = ['Mohamed Hatem', 'Ahmed Alfy', 'Sameh Salem', 'C.S'];
+function isRankingExcluded(name) {
+  const n = (name || '').trim().toLowerCase();
+  return RANKING_EXCLUDED.some(e => e.trim().toLowerCase() === n);
+}
 
 function engine_cleanRows(rawRows) {
   // Reset quality report
@@ -3079,7 +3083,7 @@ function renderExecTiers() {
   var meta = document.getElementById('exec-tiers-meta');
   if (!grid) return;
   var fullData = (KITCHINO_STATE.allDesignerData || []).filter(function(d){
-    return d.total >= 3 && !RANKING_EXCLUDED.includes(d.name);
+    return d.total >= 3 && !isRankingExcluded(d.name);
   });
   if (!ENGINE_READY || fullData.length < 3) {
     grid.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);grid-column:1/-1">Connect Google Sheets to generate performance tiers</div>';
@@ -3356,7 +3360,7 @@ function buildDesignerTiers() {
   const grid = document.getElementById('designer-tiers-grid');
   if (!grid) return;
 
-  const fullData = [...(KITCHINO_STATE.allDesignerData || [])].filter(d => d.total >= 3);
+  const fullData = [...(KITCHINO_STATE.allDesignerData || [])].filter(d => d.total >= 3 && !isRankingExcluded(d.name));
   if (!ENGINE_READY || fullData.length < 3) {
     grid.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text3);grid-column:1/-1">Connect Google Sheets to generate performance tiers</div>';
     return;
@@ -3492,7 +3496,7 @@ function buildDesignerCharts() {
   // Full designer dataset for ranking — exclusively from engine
   // RANKING_EXCLUDED designers are excluded from all ranking/comparison charts
   const yearF = KITCHINO_STATE.year;
-  let fullData = [...(KITCHINO_STATE.allDesignerData || [])].filter(d => d.total > 0 && !RANKING_EXCLUDED.includes(d.name));
+  let fullData = [...(KITCHINO_STATE.allDesignerData || [])].filter(d => d.total > 0 && !isRankingExcluded(d.name));
 
   const totalAll = fullData.reduce((s,d)=>s+d.total,0);
   const contrAll = fullData.reduce((s,d)=>s+d.contracted,0);
@@ -5080,8 +5084,8 @@ function renderExecAreaCard(overrideRows) {
   const totalContracted = areaData.reduce((s,a) => s+(a.contracted||0), 0);
   if (totEl) totEl.textContent = areaData.length + ' areas · ' + totalAll.toLocaleString() + ' measures · ' + totalContracted.toLocaleString() + ' contracted' + subtitle;
 
-  const topAreas  = areaData.slice(0, 8);
-  const restAreas = areaData.slice(8);
+  const topAreas  = areaData.slice(0, 5);
+  const restAreas = areaData.slice(5);
   const otherTotal      = restAreas.reduce((s,a) => s + a.total, 0);
   const otherContracted = restAreas.reduce((s,a) => s + (a.contracted||0), 0);
 
@@ -5266,7 +5270,7 @@ function drillSourceOthers(label, rowEl) {
 }
 
 function renderTopPerformers() {
-  const allD = [...(KITCHINO_STATE.allDesignerData || [])].filter(d => d.total > 0 && !RANKING_EXCLUDED.includes(d.name));
+  const allD = [...(KITCHINO_STATE.allDesignerData || [])].filter(d => d.total > 0 && !isRankingExcluded(d.name));
 
   const placeholder = '<div style="font-size:12px;color:var(--text3);padding:12px 0">Connect Google Sheets to load designer data</div>';
 
@@ -7621,10 +7625,3 @@ document.addEventListener('fullscreenchange', function() {
     if (btn) { btn.textContent = '⛶ Fullscreen'; btn.classList.remove('active'); }
     if (sidebar) { sidebar.style.removeProperty('display'); if (sidebar._pd) sidebar.style.display = sidebar._pd; }
     if (topbar)  { topbar.style.removeProperty('display');  if (topbar._pd)  topbar.style.display  = topbar._pd; }
-    if (wrap)    { wrap.style.marginLeft = wrap._ml||''; wrap.style.width = wrap._w||''; }
-    document.body.style.overflow = '';
-  }
-});
-</script>
-</body>
-</html>
